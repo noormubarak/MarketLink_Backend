@@ -1,0 +1,16 @@
+import { Router } from 'express';
+import * as c from '../controllers/orderController.js';
+import { verifyJWT, requireRole } from '../middleware/auth.js';
+
+const router = Router();
+router.use(verifyJWT);
+
+router.post('/', requireRole('customer'), c.create);
+router.get('/my', requireRole('customer'), c.myOrders);
+router.get('/farmer', requireRole('farmer'), c.farmerOrders);
+router.get('/:id', c.getOne);
+router.patch('/:id/status', requireRole('farmer'), c.updateStatus);
+router.patch('/:id/cancel', requireRole('customer'), c.cancel);
+router.patch('/:id/modify', requireRole('customer'), c.modify);
+
+export default router;
