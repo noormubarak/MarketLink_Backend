@@ -1,13 +1,14 @@
-import './config/env.js';
+import 'dotenv/config';
 import app from './app.js';
 import connectDB from './config/db.js';
-import { env } from './config/env.js';
+
+const PORT = process.env.PORT || 5000;
 
 async function start() {
   await connectDB();
-  app.listen(env.port, () => {
-    console.log(`✓ Server running on http://localhost:${env.port}`);
-    console.log(`  Env: ${env.nodeEnv}`);
+  app.listen(PORT, () => {
+    console.log(`✓ Server running on http://localhost:${PORT}`);
+    console.log(`  Env: ${process.env.NODE_ENV || 'development'}`);
   });
 }
 
