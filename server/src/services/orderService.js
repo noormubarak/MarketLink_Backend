@@ -22,6 +22,7 @@ export const placeOrder = async ({ customerId, farmerId, marketId, items, pickup
       price: product.price,
       quantity: item.quantity,
       unit: product.unit,
+      imageUrl: product.imageUrl, // <--- ADDED THIS LINE
     });
     total += product.price * item.quantity;
   }

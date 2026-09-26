@@ -1,0 +1,2386 @@
+{
+  "info": {
+    "name": "MarketLink API Collection",
+    "_postman_id": "c4f9e120-7f24-41bd-9c12-marketlink-api-v1",
+    "description": "Complete, production-accurate Postman Collection for testing and demonstrating MarketLink MERN Backend APIs. Includes automated token saving, role handling (Customer, Farmer, Admin), pre-configured variables, and realistic request payloads matching Mongoose models and controllers.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "farmerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@marketlink.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "admin123",
+      "type": "string"
+    },
+    {
+      "key": "farmerEmail",
+      "value": "bilal@marketlink.com",
+      "type": "string"
+    },
+    {
+      "key": "farmerPassword",
+      "value": "farmer123",
+      "type": "string"
+    },
+    {
+      "key": "customerEmail",
+      "value": "ali@marketlink.com",
+      "type": "string"
+    },
+    {
+      "key": "customerPassword",
+      "value": "customer123",
+      "type": "string"
+    },
+    {
+      "key": "marketId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "farmerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reviewId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notificationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "farmerUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pendingFarmerUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderPickupDate",
+      "value": "2026-10-03T10:00:00.000Z",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. System & Health",
+      "description": "Health check and platform status endpoints.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Check if the server is running and accessible. Public route."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Authentication",
+      "description": "User registration, authentication, token retrieval, session inspection, and logout.",
+      "item": [
+        {
+          "name": "1. Register - Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.token) {",
+                  "        pm.collectionVariables.set('authToken', res.data.token);",
+                  "        pm.collectionVariables.set('customerToken', res.data.token);",
+                  "    }",
+                  "    if (res.data && res.data.user && res.data.user._id) {",
+                  "        pm.collectionVariables.set('customerUserId', res.data.user._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zainab Bibi\",\n  \"email\": \"zainab.1790341703051@test.com\",\n  \"password\": \"customerPass123\",\n  \"phone\": \"03009988776\",\n  \"address\": \"Gulshan-e-Iqbal Block 5, Karachi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register a new customer account. Returns token and safe user profile. Automatically saves token to customerToken and authToken."
+          }
+        },
+        {
+          "name": "2. Register - Farmer (Pending Approval)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.user && res.data.user._id) {",
+                  "        pm.collectionVariables.set('pendingFarmerUserId', res.data.user._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tariq Mehmood\",\n  \"email\": \"tariq.1790341703053@farms.com\",\n  \"password\": \"farmerPass123\",\n  \"phone\": \"03331234567\",\n  \"address\": \"Malir Green Belt, Karachi\",\n  \"stallName\": \"Malir Organic Greens\",\n  \"contactPerson\": \"Tariq\",\n  \"description\": \"Fresh hydroponic vegetables and organic greens directly from farm\",\n  \"operatingDays\": [\n    \"Sat\",\n    \"Sun\"\n  ],\n  \"pickupWindows\": [\n    {\n      \"day\": \"Sat\",\n      \"startTime\": \"08:00\",\n      \"endTime\": \"13:00\"\n    },\n    {\n      \"day\": \"Sun\",\n      \"startTime\": \"08:00\",\n      \"endTime\": \"13:00\"\n    }\n  ],\n  \"location\": {\n    \"address\": \"Empress Market Saddar Stall #14\",\n    \"lat\": 24.8607,\n    \"lng\": 67.0011\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register/farmer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register",
+                "farmer"
+              ]
+            },
+            "description": "Register a new farmer account. Requires approval from Admin before the farmer can log in. Saves pendingFarmerUserId for testing Admin Approval."
+          }
+        },
+        {
+          "name": "3. Login - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.token) {",
+                  "        pm.collectionVariables.set('adminToken', res.data.token);",
+                  "        pm.collectionVariables.set('authToken', res.data.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login with seeded Admin credentials (admin@marketlink.com / admin123). Automatically stores JWT to adminToken and authToken variables."
+          }
+        },
+        {
+          "name": "4. Login - Farmer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.token) {",
+                  "        pm.collectionVariables.set('farmerToken', res.data.token);",
+                  "        pm.collectionVariables.set('authToken', res.data.token);",
+                  "    }",
+                  "    if (res.data && res.data.user && res.data.user._id) {",
+                  "        pm.collectionVariables.set('farmerUserId', res.data.user._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{farmerEmail}}\",\n  \"password\": \"{{farmerPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login with seeded Farmer credentials (bilal@marketlink.com / farmer123). Stores JWT to farmerToken and authToken variables."
+          }
+        },
+        {
+          "name": "5. Login - Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.token) {",
+                  "        pm.collectionVariables.set('customerToken', res.data.token);",
+                  "        pm.collectionVariables.set('authToken', res.data.token);",
+                  "    }",
+                  "    if (res.data && res.data.user && res.data.user._id) {",
+                  "        pm.collectionVariables.set('customerUserId', res.data.user._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{customerPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login with seeded Customer credentials (ali@marketlink.com / customer123). Stores JWT to customerToken and authToken variables."
+          }
+        },
+        {
+          "name": "6. Get Current User (/me)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the currently authenticated user's profile based on the Bearer JWT token."
+          }
+        },
+        {
+          "name": "7. Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logs out the authenticated user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Users",
+      "description": "User profile self-management endpoints.",
+      "item": [
+        {
+          "name": "Update Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ali Khan Updated\",\n  \"phone\": \"03002223344\",\n  \"address\": \"Apartment 4B, Clifton Block 2, Karachi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile"
+              ]
+            },
+            "description": "Updates the authenticated user's name, phone, or address."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Markets",
+      "description": "Farmers market discovery, geo-location queries, and admin market administration.",
+      "item": [
+        {
+          "name": "1. Get All Markets",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('marketId', res.data[0]._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/markets?day=Sat&city=Karachi",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "markets"
+              ],
+              "query": [
+                {
+                  "key": "day",
+                  "value": "Sat",
+                  "description": "Filter by operating day: Mon-Sun"
+                },
+                {
+                  "key": "city",
+                  "value": "Karachi",
+                  "description": "Filter by city substring in address"
+                }
+              ]
+            },
+            "description": "Fetch list of all active markets with optional day and city filters. Automatically saves the first market ID to marketId."
+          }
+        },
+        {
+          "name": "2. Get Nearby Markets (GeoNear)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/markets/near?lat=24.8607&lng=67.0011&radiusKm=15",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "markets",
+                "near"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "24.8607",
+                  "description": "Latitude coordinate"
+                },
+                {
+                  "key": "lng",
+                  "value": "67.0011",
+                  "description": "Longitude coordinate"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "15",
+                  "description": "Search radius in kilometers (default 10)"
+                }
+              ]
+            },
+            "description": "Returns markets located within radiusKm using MongoDB 2dsphere $near query."
+          }
+        },
+        {
+          "name": "3. Get Market by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/markets/{{marketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "markets",
+                "{{marketId}}"
+              ]
+            },
+            "description": "Retrieve complete details for a single market."
+          }
+        },
+        {
+          "name": "4. Create Market (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data._id) {",
+                  "        pm.collectionVariables.set('marketId', res.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sunday Clifton Farmers Bazaar\",\n  \"address\": \"Sea View Road, Clifton, Karachi\",\n  \"lat\": 24.8138,\n  \"lng\": 67.0315,\n  \"operatingDays\": [\n    \"Sun\"\n  ],\n  \"timings\": {\n    \"open\": \"07:00\",\n    \"close\": \"15:00\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/markets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "markets"
+              ]
+            },
+            "description": "Create a new market listing. Requires Admin role."
+          }
+        },
+        {
+          "name": "5. Update Market (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sunday Clifton Farmers Bazaar (Updated)\",\n  \"timings\": {\n    \"open\": \"06:30\",\n    \"close\": \"16:00\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/markets/{{marketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "markets",
+                "{{marketId}}"
+              ]
+            },
+            "description": "Update an existing market's schedule, name, or location. Requires Admin role."
+          }
+        },
+        {
+          "name": "6. Delete Market (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/markets/{{marketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "markets",
+                "{{marketId}}"
+              ]
+            },
+            "description": "Remove a market listing. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Categories (Admin)",
+      "description": "Manage product categories. In this backend, Category routes are mounted at /api/admin/categories and require Admin authorization.",
+      "item": [
+        {
+          "name": "1. List Categories (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('categoryId', res.data[0]._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories"
+              ]
+            },
+            "description": "Returns all active product categories. Requires Admin role."
+          }
+        },
+        {
+          "name": "2. Create Category (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data._id) {",
+                  "        pm.collectionVariables.set('categoryId', res.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Honey & Preserves\",\n  \"imageUrl\": \"https://images.unsplash.com/photo-1587049352846-4a222e784d38\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories"
+              ]
+            },
+            "description": "Creates a new category. Name must be unique. Requires Admin role."
+          }
+        },
+        {
+          "name": "3. Update Category (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organic Honey & Spreads\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Updates category details. Requires Admin role."
+          }
+        },
+        {
+          "name": "4. Delete Category (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Deletes a category. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Farmers",
+      "description": "Discover farmer stall profiles, view their product catalogs, and update farmer profile settings.",
+      "item": [
+        {
+          "name": "1. Get All Farmers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('farmerId', res.data[0]._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers?market={{marketId}}&day=Sat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers"
+              ],
+              "query": [
+                {
+                  "key": "market",
+                  "value": "{{marketId}}",
+                  "description": "Filter by market ID (optional)"
+                },
+                {
+                  "key": "day",
+                  "value": "Sat",
+                  "description": "Filter by operating day: Mon-Sun (optional)"
+                }
+              ]
+            },
+            "description": "List all farmer profiles with their user details populated. Automatically sets farmerId variable to the first farmer."
+          }
+        },
+        {
+          "name": "2. Get Farmer by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers/{{farmerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers",
+                "{{farmerId}}"
+              ]
+            },
+            "description": "Get detailed farmer profile including stall information, pickup windows, and associated markets."
+          }
+        },
+        {
+          "name": "3. Get Farmer's Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers/{{farmerId}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers",
+                "{{farmerId}}",
+                "products"
+              ]
+            },
+            "description": "Retrieves all currently available products for a specific farmer stall."
+          }
+        },
+        {
+          "name": "4. Update Farmer Profile (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stallName\": \"Fresh Farms Organic Hub\",\n  \"description\": \"Certified pesticide-free farm produce, seasonal herbs and fresh citrus\",\n  \"operatingDays\": [\n    \"Sat\",\n    \"Sun\"\n  ],\n  \"pickupWindows\": [\n    {\n      \"day\": \"Sat\",\n      \"startTime\": \"08:00\",\n      \"endTime\": \"12:00\"\n    },\n    {\n      \"day\": \"Sun\",\n      \"startTime\": \"09:00\",\n      \"endTime\": \"13:00\"\n    }\n  ],\n  \"location\": {\n    \"address\": \"Empress Market Saddar Section C\",\n    \"lat\": 24.8607,\n    \"lng\": 67.0011\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers",
+                "profile"
+              ]
+            },
+            "description": "Update stall name, operating days, pickup windows, and stall coordinates. Requires Farmer role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Products",
+      "description": "Product catalog browsing, search/filter, and farmer inventory management.",
+      "item": [
+        {
+          "name": "1. Get All Products (Filter & Search)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.items && res.data.items.length > 0) {",
+                  "        pm.collectionVariables.set('productId', res.data.items[0]._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?category=Vegetables&availableOnly=true&page=1&limit=20&sort=-price",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Tomatoes",
+                  "disabled": true,
+                  "description": "Text search in name/description"
+                },
+                {
+                  "key": "category",
+                  "value": "Vegetables",
+                  "description": "Filter by category name"
+                },
+                {
+                  "key": "farmerId",
+                  "value": "{{farmerId}}",
+                  "disabled": true,
+                  "description": "Filter by farmer ID"
+                },
+                {
+                  "key": "marketId",
+                  "value": "{{marketId}}",
+                  "disabled": true,
+                  "description": "Filter by market ID"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "50",
+                  "disabled": true,
+                  "description": "Minimum price"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "500",
+                  "disabled": true,
+                  "description": "Maximum price"
+                },
+                {
+                  "key": "availableOnly",
+                  "value": "true",
+                  "description": "Show only in-stock items"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Page size"
+                },
+                {
+                  "key": "sort",
+                  "value": "-price",
+                  "description": "Sort field (e.g. -createdAt, price, -price)"
+                }
+              ]
+            },
+            "description": "Search and filter products with pagination. Automatically sets productId to the first returned product."
+          }
+        },
+        {
+          "name": "2. Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "Fetch single product details with farmer stall name populated."
+          }
+        },
+        {
+          "name": "3. Create Product (Farmer Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data._id) {",
+                  "        pm.collectionVariables.set('productId', res.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fresh Red Strawberries\",\n  \"category\": \"Fruits\",\n  \"description\": \"Farm-fresh ripe and sweet handpicked strawberries\",\n  \"price\": 350,\n  \"unit\": \"kg\",\n  \"stockQuantity\": 45,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1464965911861-746a04b4bca6\",\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            },
+            "description": "Adds a new product to the logged-in farmer's inventory. Unit enum: kg, dozen, piece, litre, bunch. Requires Farmer role."
+          }
+        },
+        {
+          "name": "4. Update Product (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 320,\n  \"stockQuantity\": 40,\n  \"description\": \"Freshly harvested ripe strawberries - special discount\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "Update product price, quantity, or description. Farmer can only update their own products. Requires Farmer role."
+          }
+        },
+        {
+          "name": "5. Toggle Product Availability (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}",
+                "availability"
+              ]
+            },
+            "description": "Quick toggle to mark product as in-stock or out-of-stock. Requires Farmer role."
+          }
+        },
+        {
+          "name": "6. Create Product Template (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organic Spinach Bunch\",\n  \"category\": \"Vegetables\",\n  \"description\": \"Weekly recurring organic spinach\",\n  \"price\": 70,\n  \"unit\": \"bunch\",\n  \"stockQuantity\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "template"
+              ]
+            },
+            "description": "Creates an item marked with isTemplate: true for easy weekly re-listing. Requires Farmer role."
+          }
+        },
+        {
+          "name": "7. Delete Product (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "Permanently deletes a product owned by the farmer. Requires Farmer role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "08. Orders",
+      "description": "Order placement, order lifecycle (accepted, ready, completed), customer modifications, and cancellations.",
+      "item": [
+        {
+          "name": "1. Place Order (Customer Only)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Compute next Saturday at 10:00 AM (Farmer operates on Saturday with 12h cutoff rule)",
+                  "var now = new Date();",
+                  "var nextSat = new Date();",
+                  "var dayOfWeek = now.getDay(); // 0 is Sun, 6 is Sat",
+                  "var daysUntilSat = (6 - dayOfWeek + 7) % 7;",
+                  "if (daysUntilSat === 0) daysUntilSat = 7; // next week Saturday",
+                  "nextSat.setDate(now.getDate() + daysUntilSat);",
+                  "nextSat.setHours(10, 0, 0, 0);",
+                  "pm.collectionVariables.set('orderPickupDate', nextSat.toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data._id) {",
+                  "        pm.collectionVariables.set('orderId', res.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farmerId\": \"{{farmerId}}\",\n  \"marketId\": \"{{marketId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"pickupDate\": \"{{orderPickupDate}}\",\n  \"notes\": \"Please pack gently in a paper bag. Will arrive around 10:30 AM.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Places a pre-order for market pickup. Pre-request script automatically calculates the next Saturday pickup date to satisfy the farmer's schedule and 12h advance cutoff rule. Saves orderId automatically."
+          }
+        },
+        {
+          "name": "2. Get Customer Orders (My Orders)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/my",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "my"
+              ]
+            },
+            "description": "Returns the authenticated customer's order history with farmer and market info populated. Requires Customer role."
+          }
+        },
+        {
+          "name": "3. Get Order by ID (Owner or Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}"
+              ]
+            },
+            "description": "Fetch single order details. Only accessible by the customer who ordered, the receiving farmer, or an admin."
+          }
+        },
+        {
+          "name": "4. Get Farmer Incoming Orders (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/farmer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "farmer"
+              ]
+            },
+            "description": "Returns all customer orders received by the logged-in farmer. Requires Farmer role."
+          }
+        },
+        {
+          "name": "5. Get Farmer Sales Insights (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/farmer/insights",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "farmer",
+                "insights"
+              ]
+            },
+            "description": "Aggregates farmer revenue, total orders, pending orders, and top selling products. Requires Farmer role."
+          }
+        },
+        {
+          "name": "6. Update Order Status - Accepted (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Farmer accepts order. Sends in-app notification and email to customer. Status options: accepted, ready, completed, declined. Requires Farmer role."
+          }
+        },
+        {
+          "name": "7. Update Order Status - Ready for Pickup (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ready\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Farmer marks order ready for customer pickup. Requires Farmer role."
+          }
+        },
+        {
+          "name": "8. Update Order Status - Completed (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Farmer marks order completed upon handover. Allows customer to subsequently review this order. Requires Farmer role."
+          }
+        },
+        {
+          "name": "9. Modify Order Items (Customer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 3\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/modify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}",
+                "modify"
+              ]
+            },
+            "description": "Modify quantities or items before the cutoff window. Only allowed while status is 'placed' or 'accepted'. Requires Customer role."
+          }
+        },
+        {
+          "name": "10. Cancel Order (Customer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}",
+                "cancel"
+              ]
+            },
+            "description": "Cancel order before the cutoff window. Restocks product quantities and notifies farmer. Requires Customer role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "09. Reviews",
+      "description": "Order-based verified reviews, farmer responses, and admin content moderation.",
+      "item": [
+        {
+          "name": "1. Create Review (Customer Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data._id) {",
+                  "        pm.collectionVariables.set('reviewId', res.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"rating\": 5,\n  \"comment\": \"Extremely fresh produce and crisp quality! Bilal was courteous and packed everything nicely.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews"
+              ]
+            },
+            "description": "Submit a rating (1-5) and review for a completed order. Order status MUST be 'completed'. Recalculates farmer rating automatically. Requires Customer role."
+          }
+        },
+        {
+          "name": "2. Get Reviews by Farmer ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('reviewId', res.data[0]._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/farmer/{{farmerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "farmer",
+                "{{farmerId}}"
+              ]
+            },
+            "description": "Returns all customer reviews and ratings for a farmer stall. Public route."
+          }
+        },
+        {
+          "name": "3. Get Reviews by Product ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/product/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "product",
+                "{{productId}}"
+              ]
+            },
+            "description": "Returns all reviews associated with a specific product. Public route."
+          }
+        },
+        {
+          "name": "4. Farmer Respond to Review (Farmer Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"response\": \"Thank you for shopping with us! Looking forward to seeing you next Saturday at Empress Market.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/{{reviewId}}/respond",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}",
+                "respond"
+              ]
+            },
+            "description": "Farmer adds a public response to a customer's review on their stall. Requires Farmer role."
+          }
+        },
+        {
+          "name": "5. Admin Delete Review (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}"
+              ]
+            },
+            "description": "Admin moderation endpoint to remove inappropriate or spam reviews. Recalculates farmer rating. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Favorites",
+      "description": "Customer saved farmer stalls for quick re-ordering.",
+      "item": [
+        {
+          "name": "1. Get My Favorite Farmers",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favorites"
+              ]
+            },
+            "description": "Returns list of favorited farmer stalls with farmer profile and user details populated."
+          }
+        },
+        {
+          "name": "2. Toggle Favorite Farmer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites/{{farmerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favorites",
+                "{{farmerId}}"
+              ]
+            },
+            "description": "Toggles bookmarking a farmer stall. Returns { favorited: true } or { favorited: false }."
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Notifications",
+      "description": "User notification inbox, read receipts, and bulk updates.",
+      "item": [
+        {
+          "name": "1. Get My Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('notificationId', res.data[0]._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications"
+              ]
+            },
+            "description": "Fetches up to 50 latest in-app notifications for the authenticated user. Automatically sets notificationId."
+          }
+        },
+        {
+          "name": "2. Mark Notification as Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            },
+            "description": "Marks a specific notification as read."
+          }
+        },
+        {
+          "name": "3. Mark All Notifications Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": "Marks all pending unread notifications as read for the logged-in user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Admin Management",
+      "description": "Platform administration, analytics dashboards, revenue reports, farmer approval workflows, and moderation.",
+      "item": [
+        {
+          "name": "1. Admin Dashboard Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "Returns platform-wide metrics: totalFarmers, totalCustomers, totalMarkets, totalOrders. Requires Admin role."
+          }
+        },
+        {
+          "name": "2. Admin Reports & Revenue",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "reports"
+              ]
+            },
+            "description": "Aggregates total completed orders, gross platform revenue, and top 5 revenue-generating farmers. Requires Admin role."
+          }
+        },
+        {
+          "name": "3. Get Pending Farmers List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.length > 0) {",
+                  "        pm.collectionVariables.set('pendingFarmerUserId', res.data[0]._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/farmers/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "farmers",
+                "pending"
+              ]
+            },
+            "description": "Fetches list of registered farmers awaiting admin approval. Automatically sets pendingFarmerUserId. Requires Admin role."
+          }
+        },
+        {
+          "name": "4. Approve Farmer Account",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/farmers/{{pendingFarmerUserId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "farmers",
+                "{{pendingFarmerUserId}}",
+                "approve"
+              ]
+            },
+            "description": "Approves a pending farmer user account (sets isApproved: true). The farmer can now log in. Requires Admin role."
+          }
+        },
+        {
+          "name": "5. Suspend Farmer Account",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/farmers/{{farmerUserId}}/suspend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "farmers",
+                "{{farmerUserId}}",
+                "suspend"
+              ]
+            },
+            "description": "Suspends a farmer account (sets isActive: false). Requires Admin role."
+          }
+        },
+        {
+          "name": "6. Set Customer Active Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/customers/{{customerUserId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "customers",
+                "{{customerUserId}}",
+                "status"
+              ]
+            },
+            "description": "Admin can activate or deactivate customer accounts. Requires Admin role."
+          }
+        },
+        {
+          "name": "7. Admin Content Moderation - Remove Product",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "Admin forced removal of a prohibited or inappropriate product listing. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "13. AI Assistant",
+      "description": "Google Gemini 1.5 Flash powered assistant for answering questions about local produce, markets, and pickup policies. Operates offline with graceful fallback if GEMINI_API_KEY is not configured.",
+      "item": [
+        {
+          "name": "1. Chat with MarketLink AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Which vegetables are currently fresh and when can I pick up at Empress Market?\",\n  \"context\": \"Karachi Empress Market on Saturdays\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ai/chat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ai",
+                "chat"
+              ]
+            },
+            "description": "Send query to MarketLink AI. Public endpoint. Returns friendly guidance."
+          }
+        }
+      ]
+    },
+    {
+      "name": "14. Media Upload",
+      "description": "Direct memory-buffer image upload to Cloudinary for product and stall images.",
+      "item": [
+        {
+          "name": "1. Upload Image (Cloudinary)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Image file to upload (JPEG, PNG, WebP up to 5MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "upload",
+                "image"
+              ]
+            },
+            "description": "Uploads an image to Cloudinary folder 'marketlink' via multer memoryStorage. Requires JWT authentication and valid CLOUDINARY credentials in .env."
+          }
+        }
+      ]
+    }
+  ]
+}

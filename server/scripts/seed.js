@@ -25,6 +25,7 @@ const run = async () => {
     phone: '03001111111', role: 'farmer', isApproved: true,
   });
 
+  
   const customer = await User.create({
     name: 'Ali Khan', email: 'ali@marketlink.com',
     passwordHash: await User.hashPassword('customer123'),
@@ -60,14 +61,26 @@ const run = async () => {
   ]);
 
   await Product.insertMany([
-    { farmerId: farmer._id, name: 'Tomatoes', category: 'Vegetables',
-      price: 120, unit: 'kg', stockQuantity: 50, isAvailable: true },
-    { farmerId: farmer._id, name: 'Potatoes', category: 'Vegetables',
-      price: 80, unit: 'kg', stockQuantity: 100, isAvailable: true },
-    { farmerId: farmer._id, name: 'Apples', category: 'Fruits',
-      price: 250, unit: 'kg', stockQuantity: 30, isAvailable: true },
-    { farmerId: farmer._id, name: 'Milk', category: 'Dairy',
-      price: 200, unit: 'litre', stockQuantity: 20, isAvailable: true },
+    { 
+      farmerId: farmer._id, name: 'Tomatoes', category: 'Vegetables',
+      price: 120, unit: 'kg', stockQuantity: 50, isAvailable: true,
+      imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea'
+    },
+    { 
+      farmerId: farmer._id, name: 'Potatoes', category: 'Vegetables',
+      price: 80, unit: 'kg', stockQuantity: 100, isAvailable: true,
+      imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655'
+    },
+    { 
+      farmerId: farmer._id, name: 'Apples', category: 'Fruits',
+      price: 250, unit: 'kg', stockQuantity: 30, isAvailable: true,
+      imageUrl: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6'
+    },
+    { 
+      farmerId: farmer._id, name: 'Milk', category: 'Dairy',
+      price: 200, unit: 'litre', stockQuantity: 20, isAvailable: true,
+      imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150'
+    },
   ]);
 
   console.log('Seeded ✓');

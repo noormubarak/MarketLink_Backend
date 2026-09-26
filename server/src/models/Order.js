@@ -7,6 +7,7 @@ const orderItemSchema = new mongoose.Schema(
     price:     Number,
     quantity:  Number,
     unit:      String,
+    imageUrl:  String, // <--- ADDED THIS LINE
   },
   { _id: false }
 );
