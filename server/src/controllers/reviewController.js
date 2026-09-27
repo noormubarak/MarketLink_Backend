@@ -20,7 +20,8 @@ export const create = asyncHandler(async (req, res) => {
     productId: order.items[0]?.productId,
     farmerId: order.farmerId,
     customerId: req.user._id,
-    rating, comment: comment || '',
+    rating,
+    comment: comment || '',
   });
 
   await recalcFarmerRating(order.farmerId);
@@ -36,16 +37,18 @@ export const create = asyncHandler(async (req, res) => {
   return ok(res, review, 'Review posted', 201);
 });
 
+// ✨ FIXED: now includes imageUrl
 export const byFarmer = asyncHandler(async (req, res) => {
   const reviews = await Review.find({ farmerId: req.params.id })
-    .populate('customerId', 'name')
+    .populate('customerId', 'name imageUrl')   // <-- added imageUrl
     .sort('-createdAt');
   return ok(res, reviews);
 });
 
+// ✨ FIXED: now includes imageUrl
 export const byProduct = asyncHandler(async (req, res) => {
   const reviews = await Review.find({ productId: req.params.id })
-    .populate('customerId', 'name')
+    .populate('customerId', 'name imageUrl')   // <-- added imageUrl
     .sort('-createdAt');
   return ok(res, reviews);
 });

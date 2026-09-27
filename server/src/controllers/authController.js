@@ -4,6 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ok, fail } from '../utils/response.js';
 import { signToken } from '../utils/token.js';
 
+
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password, phone, address } = req.body;
   if (!name || !email || !password || !phone)
@@ -28,6 +29,7 @@ export const registerFarmer = asyncHandler(async (req, res) => {
     name, email, password, phone, address,
     stallName, contactPerson, description,
     operatingDays, pickupWindows, location,
+    markets,  // ← NEW: array of market IDs
   } = req.body;
 
   if (!name || !email || !password || !phone || !stallName || !contactPerson)
@@ -50,6 +52,7 @@ export const registerFarmer = asyncHandler(async (req, res) => {
     description: description || '',
     operatingDays: operatingDays || [],
     pickupWindows: pickupWindows || [],
+    markets: markets || [],  // ← NEW: save markets
     location: location
       ? {
           ...location,

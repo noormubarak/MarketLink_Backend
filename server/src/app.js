@@ -52,6 +52,9 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/categories', categoryRoutes);
 
+import publicCategoryRoutes from './routes/publicCategoryRoutes.js';
+app.use('/api/categories', publicCategoryRoutes);
+
 // ─── Noor routes ───────────────────────────────────────────
 app.use('/api/markets', marketRoutes);
 app.use('/api/farmers', farmerRoutes);

@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     phone:        { type: String, required: true, trim: true },
     address:      { type: String, default: '' },
+    imageUrl:     { type: String, default: '' }, // ← NEW: profile photo URL
     role:         { type: String, enum: ['customer', 'farmer', 'admin'], default: 'customer' },
     isActive:     { type: Boolean, default: true },
     isApproved:   { type: Boolean, default: true },

@@ -17,14 +17,28 @@ export const list = asyncHandler(async (req, res) => {
   } = req.query;
 
   const filter = {};
-  if (search) filter.$text = { $search: search };
+
+  // ═══════════════════════════════════════════════════════════
+  // 🔥 UPGRADED SEARCH: Regex-based (partial, case-insensitive)
+  // ═══════════════════════════════════════════════════════════
+  if (search && search.trim()) {
+    const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    filter.$or = [
+      { name: { $regex: escaped, $options: 'i' } },
+      { description: { $regex: escaped, $options: 'i' } },
+      { category: { $regex: escaped, $options: 'i' } },
+    ];
+  }
+
   if (category) filter.category = category;
   if (farmerId) filter.farmerId = farmerId;
+
   if (minPrice || maxPrice) {
     filter.price = {};
     if (minPrice) filter.price.$gte = Number(minPrice);
     if (maxPrice) filter.price.$lte = Number(maxPrice);
   }
+
   if (availableOnly === 'true') filter.isAvailable = true;
   filter.isTemplate = false;
 
@@ -34,11 +48,20 @@ export const list = asyncHandler(async (req, res) => {
   }
 
   const [items, total] = await Promise.all([
-    Product.find(filter).sort(sort).skip((page - 1) * limit).limit(Number(limit)),
+    Product.find(filter)
+      .populate({ path: 'farmerId', select: 'stallName location' })
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(Number(limit)),
     Product.countDocuments(filter),
   ]);
 
-  return ok(res, { items, total, page: Number(page), pages: Math.ceil(total / limit) });
+  return ok(res, {
+    items,
+    total,
+    page: Number(page),
+    pages: Math.ceil(total / limit),
+  });
 });
 
 export const getOne = asyncHandler(async (req, res) => {
