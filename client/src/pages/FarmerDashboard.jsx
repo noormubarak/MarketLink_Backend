@@ -14,9 +14,35 @@ import {
   FaStar, FaReply, FaQuoteLeft, FaImage
 } from 'react-icons/fa';
 import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
+  AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts';
 import './Farmer.css';
+import './FarmerDashboard.css';
+
+const RevenueChartFrame = ({ children }) => {
+  const frameRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 220 });
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return undefined;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setDimensions({
+        width: Math.floor(entry.contentRect.width),
+        height: Math.floor(entry.contentRect.height),
+      });
+    });
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={frameRef} className="fd-chart-plot">
+      {dimensions.width > 0 && React.cloneElement(children, dimensions)}
+    </div>
+  );
+};
 
 const FarmerDashboard = () => {
   const navigate = useNavigate();
@@ -521,18 +547,17 @@ const FarmerDashboard = () => {
 
   return (
     <div className="fd-page">
-      {/* ============ HEADER ============ */}
-      <header className="fd-header">
-        <div className="fd-header-inner">
+      <div className="fd-layout">
+        <aside className="fd-sidebar" aria-label="Farmer dashboard navigation">
           <div className="fd-brand">
             <div className="fd-brand-logo"><FaLeaf /></div>
             <div className="fd-brand-text">
               <span className="fd-brand-name">MarketLink</span>
-              <span className="fd-brand-tag">Farmer</span>
+              <span className="fd-brand-tag">Farmer workspace</span>
             </div>
           </div>
 
-          <nav className="fd-nav">
+          <nav className="fd-nav" aria-label="Dashboard sections">
             <button className={activeTab === 'overview' ? 'fd-nav-tab active' : 'fd-nav-tab'} onClick={() => setActiveTab('overview')}>
               <FaChartLine /><span>Overview</span>
             </button>
@@ -552,117 +577,128 @@ const FarmerDashboard = () => {
               <FaUser /><span>Profile</span>
             </button>
           </nav>
+        </aside>
 
-          <div className="fd-header-actions">
-            <button className="fd-icon-btn" onClick={fetchData} title="Refresh">
-              <FaSpinner className={loading ? 'spin' : ''} />
-            </button>
+        <div className="fd-content">
+          {/* ============ HEADER ============ */}
+          <header className="fd-header">
+            <div className="fd-header-inner">
+              {/* ✨ CHANGED: justifyContent changed to 'flex-end' to push everything to the right */}
+              <div className="fd-header-actions" style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center', gap: '16px' }}>
+                
+                {/* Left side buttons grouped together */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button className="fd-icon-btn" onClick={fetchData} title="Refresh">
+                    <FaSpinner className={loading ? 'spin' : ''} />
+                  </button>
 
-            <div className="fd-notif-wrapper" ref={notifRef}>
-              <button className="fd-icon-btn" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
-                <FaBell />
-                {unreadCount > 0 && <span className="fd-notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
-              </button>
+                  <div className="fd-notif-wrapper" ref={notifRef}>
+                    <button className="fd-icon-btn" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
+                      <FaBell />
+                      {unreadCount > 0 && <span className="fd-notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+                    </button>
 
-              {showNotifDropdown && (
-                <div className="fd-notif-dropdown">
-                  <div className="fd-notif-dropdown-head">
-                    <h4>Notifications</h4>
-                    {unreadCount > 0 && <button onClick={markAllAsRead}>Mark all read</button>}
-                  </div>
-                  <div className="fd-notif-dropdown-body">
-                    {notifications.length === 0 ? (
-                      <div className="fd-notif-empty">
-                        <FaBell /><p>All caught up!</p><span>New orders will appear here</span>
+                    {showNotifDropdown && (
+                      <div className="fd-notif-dropdown">
+                        <div className="fd-notif-dropdown-head">
+                          <h4>Notifications</h4>
+                          {unreadCount > 0 && <button onClick={markAllAsRead}>Mark all read</button>}
+                        </div>
+                        <div className="fd-notif-dropdown-body">
+                          {notifications.length === 0 ? (
+                            <div className="fd-notif-empty">
+                              <FaBell /><p>All caught up!</p><span>New orders will appear here</span>
+                            </div>
+                          ) : (
+                            notifications.slice(0, 6).map((notif) => {
+                              const { icon, color } = getNotifIcon(notif.type);
+                              const productImage = getNotifImage(notif);
+
+                              return (
+                                <button
+                                  key={notif._id}
+                                  className={notif.isRead ? 'fd-notif-row' : 'fd-notif-row unread'}
+                                  onClick={() => handleNotifClick(notif)}
+                                >
+                                  <div className={`fd-notif-row-icon notif-${color} ${productImage ? 'has-image' : ''}`}>
+                                    {productImage ? (
+                                      <img src={productImage} alt="" />
+                                    ) : (
+                                      icon
+                                    )}
+                                  </div>
+                                  <div className="fd-notif-row-body">
+                                    <p>{notif.message}</p>
+                                    <span>{getRelativeTime(notif.createdAt)}</span>
+                                  </div>
+                                  {!notif.isRead && <span className="fd-notif-dot" />}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                        {notifications.length > 0 && (
+                          <div className="fd-notif-dropdown-foot">
+                            <button onClick={() => { setShowNotifDropdown(false); setActiveTab('overview'); }}>Close</button>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      notifications.slice(0, 6).map((notif) => {
-                        const { icon, color } = getNotifIcon(notif.type);
-                        const productImage = getNotifImage(notif);
-
-                        return (
-                          <button
-                            key={notif._id}
-                            className={notif.isRead ? 'fd-notif-row' : 'fd-notif-row unread'}
-                            onClick={() => handleNotifClick(notif)}
-                          >
-                            <div className={`fd-notif-row-icon notif-${color} ${productImage ? 'has-image' : ''}`}>
-                              {productImage ? (
-                                <img src={productImage} alt="" />
-                              ) : (
-                                icon
-                              )}
-                            </div>
-                            <div className="fd-notif-row-body">
-                              <p>{notif.message}</p>
-                              <span>{getRelativeTime(notif.createdAt)}</span>
-                            </div>
-                            {!notif.isRead && <span className="fd-notif-dot" />}
-                          </button>
-                        );
-                      })
                     )}
                   </div>
-                  {notifications.length > 0 && (
-                    <div className="fd-notif-dropdown-foot">
-                      <button onClick={() => { setShowNotifDropdown(false); setActiveTab('overview'); }}>Close</button>
-                    </div>
-                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="fd-user-wrapper" ref={userMenuRef}>
-              <button className="fd-user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-                <div className="fd-user-avatar">
-                  {profile?.imageUrl ? (
-                    <img src={profile.imageUrl} alt="" />
-                  ) : (
-                    user?.name?.charAt(0).toUpperCase() || 'F'
-                  )}
-                </div>
-                <div className="fd-user-info">
-                  <span className="fd-user-name">{user?.name?.split(' ')[0]}</span>
-                  <span className="fd-user-role">{profile?.stallName || 'Farmer'}</span>
-                </div>
-                <FaChevronDown className={showUserMenu ? 'fd-user-chevron rotate' : 'fd-user-chevron'} />
-              </button>
-
-              {showUserMenu && (
-                <div className="fd-user-dropdown">
-                  <div className="fd-user-dropdown-head">
-                    <div className="fd-user-dropdown-avatar">
+                {/* Right side profile section */}
+                <div className="fd-user-wrapper" ref={userMenuRef}>
+                  <button className="fd-user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
+                    <div className="fd-user-avatar">
                       {profile?.imageUrl ? (
                         <img src={profile.imageUrl} alt="" />
                       ) : (
-                        user?.name?.charAt(0).toUpperCase()
+                        user?.name?.charAt(0).toUpperCase() || 'F'
                       )}
                     </div>
-                    <div className="fd-user-dropdown-meta">
-                      <span className="fd-user-dropdown-name">{user?.name}</span>
-                      <span className="fd-user-dropdown-email">{user?.email}</span>
+                    <div className="fd-user-info">
+                      <span className="fd-user-name">{user?.name?.split(' ')[0]}</span>
+                      <span className="fd-user-role">{profile?.stallName || 'Farmer'}</span>
                     </div>
-                  </div>
-                  <div className="fd-user-dropdown-divider" />
-                  <button className="fd-user-dropdown-item" onClick={() => { setActiveTab('profile'); setShowUserMenu(false); }}>
-                    <FaUser /> My Profile
+                    <FaChevronDown className={showUserMenu ? 'fd-user-chevron rotate' : 'fd-user-chevron'} />
                   </button>
-                  <button className="fd-user-dropdown-item" onClick={() => { setActiveTab('products'); setShowUserMenu(false); }}>
-                    <FaBoxOpen /> My Products
-                  </button>
-                  <button className="fd-user-dropdown-item" onClick={() => { setActiveTab('reviews'); setShowUserMenu(false); }}>
-                    <FaStar /> My Reviews
-                  </button>
-                  <div className="fd-user-dropdown-divider" />
-                  <button className="fd-user-dropdown-item danger" onClick={handleLogout}>
-                    <FaSignOutAlt /> Logout
-                  </button>
+
+                  {showUserMenu && (
+                    <div className="fd-user-dropdown">
+                      <div className="fd-user-dropdown-head">
+                        <div className="fd-user-dropdown-avatar">
+                          {profile?.imageUrl ? (
+                            <img src={profile.imageUrl} alt="" />
+                          ) : (
+                            user?.name?.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="fd-user-dropdown-meta">
+                          <span className="fd-user-dropdown-name">{user?.name}</span>
+                          <span className="fd-user-dropdown-email">{user?.email}</span>
+                        </div>
+                      </div>
+                      <div className="fd-user-dropdown-divider" />
+                      <button className="fd-user-dropdown-item" onClick={() => { setActiveTab('profile'); setShowUserMenu(false); }}>
+                        <FaUser /> My Profile
+                      </button>
+                      <button className="fd-user-dropdown-item" onClick={() => { setActiveTab('products'); setShowUserMenu(false); }}>
+                        <FaBoxOpen /> My Products
+                      </button>
+                      <button className="fd-user-dropdown-item" onClick={() => { setActiveTab('reviews'); setShowUserMenu(false); }}>
+                        <FaStar /> My Reviews
+                      </button>
+                      <div className="fd-user-dropdown-divider" />
+                      <button className="fd-user-dropdown-item danger" onClick={handleLogout}>
+                        <FaSignOutAlt /> Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
-      </header>
+          </header>
 
       {/* ============ MAIN ============ */}
       <main className="fd-main">
@@ -747,7 +783,7 @@ const FarmerDashboard = () => {
                   </div>
                 </div>
                 <div className="fd-chart-body">
-                  <ResponsiveContainer width="100%" height={220}>
+                  <RevenueChartFrame>
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -761,7 +797,7 @@ const FarmerDashboard = () => {
                       <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb', fontSize: 12, fontFamily: 'Outfit' }} formatter={(v) => [`Rs. ${v}`, 'Revenue']} />
                       <Area type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={2.5} fill="url(#revenueGradient)" dot={{ r: 0 }} activeDot={{ r: 5, fill: '#16a34a', stroke: '#ffffff', strokeWidth: 2 }} />
                     </AreaChart>
-                  </ResponsiveContainer>
+                  </RevenueChartFrame>
                 </div>
               </div>
 
@@ -972,6 +1008,13 @@ const FarmerDashboard = () => {
                         );
                       })}
                     </div>
+
+                    {order.notes?.trim() && (
+                      <div className="fd-order-notes">
+                        <strong>Customer note</strong>
+                        <p>{order.notes}</p>
+                      </div>
+                    )}
 
                     <div className="fd-order-foot">
                       <div className="fd-order-total">
@@ -1327,6 +1370,8 @@ const FarmerDashboard = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

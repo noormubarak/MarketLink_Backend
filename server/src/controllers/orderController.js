@@ -6,12 +6,52 @@ import { ok, fail } from '../utils/response.js';
 import { placeOrder } from '../services/orderService.js';
 import { createNotification } from '../services/notificationService.js';
 import { sendEmail } from '../services/emailService.js';
+import sendOrderEmail from '../utils/sendEmail.js';
+
+// ────────────────────────────────────────────────────────────
+// HELPER — Resolve a product image for a given order
+// Prefers the snapshot stored on order.items[].imageUrl.
+// Falls back to fetching from Product if the snapshot is missing.
+// ────────────────────────────────────────────────────────────
+const getOrderImage = async (order) => {
+  if (!order || !order.items || order.items.length === 0) return '';
+
+  const first = order.items[0];
+
+  // 1. Snapshot already on the order
+  if (first.imageUrl) return first.imageUrl;
+
+  // 2. Fallback: fetch from Product
+  if (first.productId) {
+    const product = await Product.findById(first.productId).select('imageUrl');
+    return product?.imageUrl || '';
+  }
+
+  return '';
+};
 
 // ────────────────────────────────────────────────────────────
 // CREATE — Customer places an order
 // ────────────────────────────────────────────────────────────
 export const create = asyncHandler(async (req, res) => {
   const order = await placeOrder({ customerId: req.user._id, ...req.body });
+  try {
+    await sendOrderEmail({
+      to: req.user.email,
+      subject: 'Order Confirmation',
+      html: `
+        <h2>Order Confirmation</h2>
+        <p>Hello ${req.user.name},</p>
+        <p>Your pre-order has been received.</p>
+        <p><strong>Order ID:</strong> ${order._id}</p>
+        <p><strong>Total:</strong> Rs. ${order.totalAmount}</p>
+        <p><strong>Pickup:</strong> ${new Date(order.pickupDate).toDateString()},
+          ${order.pickupWindow?.startTime || ''}–${order.pickupWindow?.endTime || ''}</p>
+      `,
+    });
+  } catch (error) {
+    console.error('Order confirmation email failed:', error.message);
+  }
   return ok(res, order, 'Order placed', 201);
 });
 
@@ -127,12 +167,16 @@ export const updateStatus = asyncHandler(async (req, res) => {
     completed: 'Order completed — please leave a review',
   };
 
+  // ─── Resolve product image (from snapshot or Product) ────
+  const imageUrl = await getOrderImage(order);
+
   // ─── In-app notification ─────────────────────────────────
   await createNotification({
     userId: order.customerId._id,
     type: `order_${status}`,
     message: msgMap[status],
     link: `/orders/${order._id}`,
+    imageUrl, // <── product image
   });
 
   // ─── Email notification ──────────────────────────────────
@@ -143,6 +187,7 @@ export const updateStatus = asyncHandler(async (req, res) => {
       html: `
         <h2>Hello ${order.customerId.name},</h2>
         <p>${msgMap[status]}</p>
+        ${imageUrl ? `<p><img src="${imageUrl}" alt="product" style="max-width:200px;border-radius:8px;" /></p>` : ''}
         <p><strong>Order ID:</strong> ${order._id}</p>
         <p><strong>Total:</strong> Rs. ${order.totalAmount}</p>
         <p><strong>Pickup:</strong> ${new Date(order.pickupDate).toDateString()},
@@ -181,11 +226,16 @@ export const cancel = asyncHandler(async (req, res) => {
   }
 
   const farmer = await FarmerProfile.findById(order.farmerId);
+
+  // ─── Resolve product image ────────────────────────────────
+  const imageUrl = await getOrderImage(order);
+
   await createNotification({
     userId: farmer.userId,
     type: 'order_cancelled',
     message: 'An order was cancelled',
     link: `/farmer/orders/${order._id}`,
+    imageUrl, // <── product image
   });
 
   return ok(res, order, 'Order cancelled');
@@ -221,14 +271,14 @@ export const modify = asyncHandler(async (req, res) => {
     if (!product || product.stockQuantity < item.quantity)
       return fail(res, 'Insufficient stock');
 
-    // BUILD THE NEW SNAPSHOT (INCLUDING IMAGE)
+    // Build new snapshot (including image)
     snapshot.push({
       productId: product._id,
       name: product.name,
       price: product.price,
       quantity: item.quantity,
       unit: product.unit,
-      imageUrl: product.imageUrl, // <--- ADDED THIS LINE
+      imageUrl: product.imageUrl,
     });
     total += product.price * item.quantity;
 
@@ -240,6 +290,22 @@ export const modify = asyncHandler(async (req, res) => {
   order.items = snapshot;
   order.totalAmount = total;
   await order.save();
+
+  // Optional: notify farmer about the modification
+  try {
+    const farmer = await FarmerProfile.findById(order.farmerId);
+    if (farmer) {
+      await createNotification({
+        userId: farmer.userId,
+        type: 'order_modified',
+        message: 'A customer modified their order',
+        link: `/farmer/orders/${order._id}`,
+        imageUrl: snapshot[0]?.imageUrl || '',
+      });
+    }
+  } catch (e) {
+    console.error('Modify notification failed (non-blocking):', e.message);
+  }
 
   return ok(res, order, 'Order updated');
 });

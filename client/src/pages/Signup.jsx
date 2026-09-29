@@ -64,24 +64,25 @@ const Signup = () => {
     )
   ).sort((a, b) => DAYS.indexOf(a) - DAYS.indexOf(b));
 
-  // ============ COMPUTE PICKUP WINDOW FROM SELECTED MARKETS ============
-  // Use the earliest open time and latest close time across all selected markets
-  const computedPickupWindow = (() => {
+  // ============ COMPUTE PICKUP WINDOWS FROM SELECTED MARKETS ============
+  const computedPickupWindows = (() => {
     if (farmerForm.selectedMarkets.length === 0) return null;
     const selected = farmerForm.selectedMarkets
       .map((id) => availableMarkets.find((m) => m._id === id))
       .filter(Boolean);
     if (selected.length === 0) return null;
 
-    const openTimes = selected.map((m) => m.timings?.open).filter(Boolean);
-    const closeTimes = selected.map((m) => m.timings?.close).filter(Boolean);
-    const firstDay = computedOperatingDays[0] || 'Sat';
+    return computedOperatingDays.map((day) => {
+      const marketsOpenThatDay = selected.filter((market) => market.operatingDays?.includes(day));
+      const openTimes = marketsOpenThatDay.map((market) => market.timings?.open).filter(Boolean).sort();
+      const closeTimes = marketsOpenThatDay.map((market) => market.timings?.close).filter(Boolean).sort().reverse();
 
-    return {
-      day: firstDay,
-      startTime: openTimes.length ? openTimes.sort()[0] : '08:00',
-      endTime: closeTimes.length ? closeTimes.sort().reverse()[0] : '12:00',
-    };
+      return {
+        day,
+        startTime: openTimes[0] || '08:00',
+        endTime: closeTimes[0] || '12:00',
+      };
+    });
   })();
 
   const handleCustomerChange = (e) =>
@@ -135,13 +136,7 @@ const Signup = () => {
     const operatingDays = computedOperatingDays;
 
     // Use computed pickup window from markets
-    const pickupWindows = computedPickupWindow
-      ? [{
-          day: computedPickupWindow.day,
-          startTime: computedPickupWindow.startTime,
-          endTime: computedPickupWindow.endTime,
-        }]
-      : [];
+    const pickupWindows = computedPickupWindows || [];
 
     try {
       await registerFarmer({
@@ -426,7 +421,7 @@ const Signup = () => {
                     </div>
                   </div>
 
-                  {computedPickupWindow && (
+                  {computedPickupWindows?.length > 0 && (
                     <div className="form-group">
                       <label>
                         Your Pickup Window
@@ -435,7 +430,9 @@ const Signup = () => {
                       <div className="pickup-window-preview">
                         <FaClock className="preview-icon" />
                         <span>
-                          {computedPickupWindow.day}: {computedPickupWindow.startTime} — {computedPickupWindow.endTime}
+                          {computedPickupWindows.map((window) =>
+                            `${window.day}: ${window.startTime} — ${window.endTime}`
+                          ).join(' · ')}
                         </span>
                       </div>
                     </div>

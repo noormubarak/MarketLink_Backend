@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaBell, FaCheck, FaCheckDouble, FaShoppingBag, FaCheckCircle,
-  FaTruck, FaTimesCircle, FaLeaf, FaSpinner, FaFilter, FaArrowLeft
+  FaTruck, FaTimesCircle, FaLeaf, FaSpinner, FaArrowLeft
 } from 'react-icons/fa';
 import { useNotifications } from '../context/NotificationContext';
 import './Notifications.css';
@@ -46,7 +46,14 @@ const Notifications = () => {
 
   const handleClick = (notif) => {
     if (!notif.isRead) markAsRead(notif._id);
-    if (notif.link) navigate(notif.link);
+    const orderId = notif.link?.match(/\/orders\/([a-f\d]{24})/i)?.[1];
+    if (orderId && notif.type?.startsWith('order_')) {
+      navigate('/customer', {
+        state: notif.type === 'order_completed' ? { reviewOrderId: orderId } : undefined,
+      });
+    } else if (notif.link) {
+      navigate(notif.link);
+    }
   };
 
   return (
@@ -121,9 +128,26 @@ const Notifications = () => {
                   className={notif.isRead ? 'notif-page-item' : 'notif-page-item unread'}
                   onClick={() => handleClick(notif)}
                 >
-                  <div className={`notif-page-item-icon notif-icon-${color}`}>
+                  {/* Image if available, otherwise type-based icon */}
+                  {notif.imageUrl ? (
+                    <img
+                      src={notif.imageUrl}
+                      alt=""
+                      className="notif-page-item-image"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+
+                  <div
+                    className={`notif-page-item-icon notif-icon-${color}`}
+                    style={notif.imageUrl ? { display: 'none' } : undefined}
+                  >
                     {icon}
                   </div>
+
                   <div className="notif-page-item-body">
                     <p className="notif-page-item-message">{notif.message}</p>
                     <span className="notif-page-item-time">

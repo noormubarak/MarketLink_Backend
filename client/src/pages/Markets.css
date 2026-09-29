@@ -148,7 +148,7 @@
 
 .sidebar-block:hover {
   border-color: #bbf7d0;
-  box-shadow: 0 8px 22px rgba(22, 163, 74, 0.06);
+  box-shadow: 0 8px 22px rgba(46, 125, 50, 0.06);
 }
 
 .sidebar-block-label {
@@ -169,7 +169,7 @@
   justify-content: center;
   gap: 8px;
   padding: 14px 16px;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, #2e7d32, #43a047);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -178,12 +178,12 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.28);
+  box-shadow: 0 6px 16px rgba(46, 125, 50, 0.28);
 }
 
 .sidebar-nearby:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.4);
+  box-shadow: 0 10px 24px rgba(46, 125, 50, 0.4);
 }
 
 .sidebar-nearby.active {
@@ -222,7 +222,7 @@
 .sidebar-clear:hover {
   background: #f0fdf4;
   border-color: #bbf7d0;
-  color: #16a34a;
+  color: #2e7d32;
 }
 
 .sidebar-clear svg {
@@ -284,7 +284,7 @@
 
 .stat-icon.green {
   background: #dcfce7;
-  color: #15803d;
+  color: #1b5e20;
 }
 
 .stat-icon.amber {
@@ -339,13 +339,13 @@
 
 .sidebar-day:hover:not(.active) {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #2e7d32;
 }
 
 .sidebar-day.active {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, #2e7d32, #43a047);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.28);
   border-color: transparent;
 }
 
@@ -368,7 +368,7 @@
   height: 36px;
   border-radius: 10px;
   background: #ffffff;
-  color: #16a34a;
+  color: #2e7d32;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -380,7 +380,7 @@
   display: block;
   font-size: 0.82rem;
   font-weight: 800;
-  color: #15803d;
+  color: #1b5e20;
   margin-bottom: 3px;
 }
 
@@ -459,7 +459,7 @@
 }
 
 .market-card-strip.open {
-  background: linear-gradient(135deg, #052e16 0%, #166534 55%, #16a34a 100%);
+  background: linear-gradient(135deg, #052e16 0%, #166534 55%, #2e7d32 100%);
 }
 
 .market-card-strip.open::before {
@@ -484,7 +484,7 @@
   gap: 5px;
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.95);
-  color: #15803d;
+  color: #1b5e20;
   border-radius: 50px;
   font-size: 0.68rem;
   font-weight: 800;
@@ -534,7 +534,7 @@
   height: 72px;
   border-radius: 20px;
   background: linear-gradient(135deg, #ffffff, #f0fdf4);
-  color: #16a34a;
+  color: #2e7d32;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -542,7 +542,7 @@
   flex-shrink: 0;
   border: 4px solid #ffffff;
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12),
-              0 0 0 1px rgba(22, 163, 74, 0.1);
+              0 0 0 1px rgba(46, 125, 50, 0.1);
   transition: transform 0.35s ease;
 }
 
@@ -561,7 +561,7 @@
 }
 
 .market-card:hover .market-name {
-  color: #15803d;
+  color: #1b5e20;
 }
 
 .market-info-grid {
@@ -582,7 +582,7 @@
   height: 30px;
   border-radius: 9px;
   background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-  color: #16a34a;
+  color: #2e7d32;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -592,7 +592,7 @@
 }
 
 .market-card:hover .market-info-icon-wrap {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, #2e7d32, #43a047);
   color: #ffffff;
 }
 
@@ -656,16 +656,16 @@
 }
 
 .day-pill.active {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, #2e7d32, #43a047);
   border-color: transparent;
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
+  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
   transform: translateY(-2px);
 }
 
 .day-pill.active.today {
-  background: linear-gradient(135deg, #15803d, #16a34a);
-  box-shadow: 0 6px 14px rgba(22, 163, 74, 0.5),
+  background: linear-gradient(135deg, #1b5e20, #2e7d32);
+  box-shadow: 0 6px 14px rgba(46, 125, 50, 0.5),
               0 0 0 3px rgba(34, 197, 94, 0.2);
   transform: translateY(-3px) scale(1.05);
 }
@@ -684,7 +684,7 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, #2e7d32, #43a047);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -693,7 +693,7 @@
   font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 6px 15px rgba(22, 163, 74, 0.25);
+  box-shadow: 0 6px 15px rgba(46, 125, 50, 0.25);
   position: relative;
   overflow: hidden;
 }
@@ -702,7 +702,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #15803d, #16a34a);
+  background: linear-gradient(135deg, #1b5e20, #2e7d32);
   opacity: 0;
   transition: opacity 0.25s ease;
   z-index: 0;
@@ -710,7 +710,7 @@
 
 .market-view-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.4);
+  box-shadow: 0 10px 22px rgba(46, 125, 50, 0.4);
 }
 
 .market-view-btn:hover::after {
@@ -733,7 +733,7 @@
   background: #ffffff;
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;
-  color: #16a34a;
+  color: #2e7d32;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -741,11 +741,11 @@
 }
 
 .market-directions-btn:hover {
-  border-color: #16a34a;
+  border-color: #2e7d32;
   background: #f0fdf4;
-  color: #15803d;
+  color: #1b5e20;
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(22, 163, 74, 0.2);
+  box-shadow: 0 6px 15px rgba(46, 125, 50, 0.2);
 }
 
 /* =========================================
@@ -814,7 +814,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #16a34a;
+  background: #2e7d32;
   color: #ffffff;
   border: none;
   padding: 11px 24px;
@@ -827,7 +827,7 @@
 }
 
 .retry-btn:hover {
-  background: #15803d;
+  background: #1b5e20;
   transform: translateY(-2px);
 }
 
@@ -1056,7 +1056,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, #2e7d32, #43a047);
   color: #ffffff;
   border: none;
   padding: 13px;
@@ -1066,10 +1066,10 @@
   font-size: 0.92rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.25);
+  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.25);
 }
 
 .modal-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(22, 163, 74, 0.35);
+  box-shadow: 0 10px 25px rgba(46, 125, 50, 0.35);
 }

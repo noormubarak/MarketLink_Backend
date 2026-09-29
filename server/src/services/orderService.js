@@ -27,8 +27,18 @@ export const placeOrder = async ({ customerId, farmerId, marketId, items, pickup
     total += product.price * item.quantity;
   }
 
-  const dayName = new Date(pickupDate).toLocaleDateString('en-US', { weekday: 'short' });
-  const window = farmer.pickupWindows.find(w => w.day === dayName);
+  const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
+    new Date(pickupDate).getUTCDay()
+  ];
+  const window = farmer.pickupWindows.find((pickupWindow) => pickupWindow.day === dayName) || (
+    farmer.operatingDays.includes(dayName)
+      ? {
+          day: dayName,
+          startTime: farmer.pickupWindows[0]?.startTime || '08:00',
+          endTime: farmer.pickupWindows[0]?.endTime || '12:00',
+        }
+      : null
+  );
   if (!window) throw Object.assign(new Error('No pickup window on this day'), { status: 400 });
 
   const cutoff = new Date(new Date(pickupDate).getTime() - 12 * 60 * 60 * 1000);

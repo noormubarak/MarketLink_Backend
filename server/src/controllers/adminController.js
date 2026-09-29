@@ -81,7 +81,7 @@ export const removeProduct = asyncHandler(async (req, res) => {
 // ═══════════════════════════════════════════════════════════
 export const listCustomers = asyncHandler(async (req, res) => {
   const customers = await User.find({ role: 'customer' })
-    .select('name email phone address isActive favorites createdAt')
+    .select('name email phone address imageUrl isActive favorites createdAt')
     .sort('-createdAt');
   return ok(res, customers);
 });
@@ -91,7 +91,7 @@ export const listCustomers = asyncHandler(async (req, res) => {
 // ═══════════════════════════════════════════════════════════
 export const listReviews = asyncHandler(async (req, res) => {
   const reviews = await Review.find()
-    .populate('customerId', 'name email')
+    .populate('customerId', 'name email imageUrl')
     .populate('productId', 'name')
     .populate({ path: 'farmerId', select: 'stallName' })
     .sort('-createdAt')

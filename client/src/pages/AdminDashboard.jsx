@@ -1,30 +1,114 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import {
   FaUsers, FaStore, FaShoppingBag, FaTractor,
   FaCheckCircle, FaBan, FaSpinner, FaSyncAlt,
+  FaSignOutAlt, FaChevronDown,
   FaLeaf, FaChartLine, FaMoneyBillWave, FaTrophy,
   FaPlus, FaEdit, FaTrash, FaTimes, FaMapMarkerAlt,
-  FaClock, FaCalendarAlt, FaListAlt, FaUserSlash, FaUserCheck,
+  FaClock, FaCalendarAlt, FaListAlt, FaUserSlash, FaUserCheck, FaEnvelope,
   FaStar, FaCommentSlash, FaFilter, FaBox, FaTag, FaBoxOpen,
   FaImage, FaToggleOn, FaToggleOff
 } from 'react-icons/fa';
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip,
-  CartesianGrid, PieChart, Pie, Cell, BarChart, Bar, Legend
+  Area, AreaChart, LineChart, Line, XAxis, YAxis, Tooltip,
+  CartesianGrid, PieChart, Pie, Cell, Label, BarChart, Bar, Legend
 } from 'recharts';
 import './Admin.css';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+const RevenueTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const { revenue = 0, orders = 0 } = payload[0].payload;
+
+  return (
+    <div className="admin-chart-tooltip">
+      <span>{label}</span>
+      <strong>Rs. {Number(revenue).toLocaleString()}</strong>
+      <small>{orders} completed {orders === 1 ? 'order' : 'orders'}</small>
+    </div>
+  );
+};
+
+const ChartFrame = ({ children }) => {
+  const frameRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 260 });
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return undefined;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setDimensions({
+        width: Math.floor(entry.contentRect.width),
+        height: Math.floor(entry.contentRect.height),
+      });
+    });
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={frameRef} className="admin-chart-frame">
+      {dimensions.width > 0 && React.cloneElement(children, dimensions)}
+    </div>
+  );
+};
+
+const AdminSidebar = ({ activeTab, setActiveTab, counts }) => {
+  const items = [
+    { id: 'overview', label: 'Overview', icon: FaChartLine },
+    { id: 'customers', label: 'Customers', count: counts.customers, icon: FaUsers },
+    { id: 'markets', label: 'Markets', count: counts.markets, icon: FaStore },
+    { id: 'products', label: 'Products', count: counts.products, icon: FaBox },
+    { id: 'categories', label: 'Categories', count: counts.categories, icon: FaTag },
+    { id: 'reviews', label: 'Reviews', count: counts.reviews, icon: FaStar },
+    { id: 'contact', label: 'Contact Messages', count: counts.contact, icon: FaEnvelope },
+  ];
+
+  return (
+    <aside className="admin-sidebar" aria-label="Admin navigation">
+      <div className="admin-sidebar-brand">
+        <span className="admin-sidebar-brand-icon"><FaLeaf /></span>
+        <span className="admin-sidebar-brand-copy">
+          <strong>MarketLink</strong>
+          <small>Admin workspace</small>
+        </span>
+      </div>
+      <div className="admin-sidebar-heading">Workspace</div>
+      <nav className="admin-sidebar-nav" role="tablist" aria-label="Dashboard sections">
+        {items.map(({ id, label, count, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === id}
+            className={activeTab === id ? 'admin-sidebar-link active' : 'admin-sidebar-link'}
+            onClick={() => setActiveTab(id)}
+          >
+            <Icon />
+            <span>{label}</span>
+            {count !== undefined && <span className="admin-sidebar-count">{count}</span>}
+          </button>
+        ))}
+      </nav>
+    </aside>
+  );
+};
+
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showAdminProfile, setShowAdminProfile] = useState(false);
 
   // Data
   const [stats, setStats] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
+  const [chartRange, setChartRange] = useState(14);
   const [pendingFarmers, setPendingFarmers] = useState([]);
   const [allCustomers, setAllCustomers] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
@@ -32,6 +116,7 @@ const AdminDashboard = () => {
   const [reports, setReports] = useState(null);
   const [markets, setMarkets] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [contactMessages, setContactMessages] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
@@ -50,6 +135,9 @@ const AdminDashboard = () => {
   // ✨ Category modal
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryImageUploading, setCategoryImageUploading] = useState(false);
+  const [categoryImageError, setCategoryImageError] = useState('');
+  const categoryFileInputRef = useRef(null);
   const [categoryForm, setCategoryForm] = useState({
     name: '', imageUrl: '', isActive: true,
   });
@@ -60,7 +148,7 @@ const AdminDashboard = () => {
     try {
       const [
         statsRes, pendingRes, reportsRes, marketsRes,
-        custRes, revRes, prodRes, analyticsRes, catRes
+        custRes, revRes, prodRes, analyticsRes, catRes, contactRes
       ] = await Promise.all([
         api.get('/admin/dashboard').catch(() => ({ data: { data: null } })),
         api.get('/admin/farmers/pending').catch(() => ({ data: { data: [] } })),
@@ -71,6 +159,7 @@ const AdminDashboard = () => {
         api.get('/admin/products').catch(() => ({ data: { data: [] } })),
         api.get('/admin/analytics').catch(() => ({ data: { data: null } })),
         api.get('/admin/categories').catch(() => ({ data: { data: [] } })),
+        api.get('/contact').catch(() => ({ data: { data: [] } })),
       ]);
       setStats(statsRes.data.data);
       setPendingFarmers(pendingRes.data.data);
@@ -81,6 +170,7 @@ const AdminDashboard = () => {
       setAllProducts(prodRes.data.data);
       setAnalyticsData(analyticsRes.data.data);
       setCategories(catRes.data.data);
+      setContactMessages(contactRes.data.data || []);
     } catch (err) {
       console.error('Fetch error:', err);
       showMessage('error', 'Failed to load admin data.');
@@ -95,6 +185,30 @@ const AdminDashboard = () => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 3500);
   };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  const revenueChartData = (analyticsData?.revenueChart || []).slice(-chartRange);
+  const userGrowthData = (analyticsData?.userGrowth || []).slice(-chartRange);
+  const orderStatusTotal = (analyticsData?.statusChart || []).reduce((total, status) => total + status.value, 0);
+  const renderChartRange = () => (
+    <div className="admin-chart-range" role="group" aria-label="Chart date range">
+      {[7, 14].map((range) => (
+        <button
+          key={range}
+          type="button"
+          className={chartRange === range ? 'active' : ''}
+          aria-pressed={chartRange === range}
+          onClick={() => setChartRange(range)}
+        >
+          {range} days
+        </button>
+      ))}
+    </div>
+  );
 
   // ============ FARMER ACTIONS ============
   const handleApprove = async (farmerId) => {
@@ -236,6 +350,7 @@ const AdminDashboard = () => {
   const openAddCategory = () => {
     setEditingCategory(null);
     setCategoryForm({ name: '', imageUrl: '', isActive: true });
+    setCategoryImageError('');
     setShowCategoryModal(true);
   };
 
@@ -246,12 +361,45 @@ const AdminDashboard = () => {
       imageUrl: cat.imageUrl || '',
       isActive: cat.isActive !== false,
     });
+    setCategoryImageError('');
     setShowCategoryModal(true);
+  };
+
+  const handleCategoryImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setCategoryImageError('Choose an image file.');
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setCategoryImageError('Image must be smaller than 5MB.');
+      event.target.value = '';
+      return;
+    }
+
+    setCategoryImageError('');
+    setCategoryImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setCategoryForm((prev) => ({ ...prev, imageUrl: res.data.data.url }));
+    } catch (err) {
+      setCategoryImageError(err.response?.data?.error || 'Image upload failed.');
+    } finally {
+      setCategoryImageUploading(false);
+      event.target.value = '';
+    }
   };
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault();
     if (!categoryForm.name.trim()) return showMessage('error', 'Category name is required.');
+    if (categoryImageUploading) return;
 
     setActionLoading('category');
     const payload = {
@@ -333,6 +481,21 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-page">
+      <div className="admin-layout">
+        <AdminSidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          counts={{
+            customers: allCustomers.length,
+            markets: markets.length,
+            products: allProducts.length,
+            categories: categories.length,
+            reviews: allReviews.length,
+            contact: contactMessages.length,
+          }}
+        />
+
+        <main className="admin-main-content">
       <div className="admin-header">
         <div>
           <h1 className="admin-title">
@@ -340,9 +503,37 @@ const AdminDashboard = () => {
           </h1>
           <p className="admin-subtitle">Welcome back, {user?.name}</p>
         </div>
-        <button className="admin-refresh-btn" onClick={fetchData}>
-          <FaSyncAlt /> Refresh
-        </button>
+        <div className="admin-header-actions">
+          
+          <div className="admin-header-dropdown-wrap">
+            <button
+              type="button"
+              className="admin-profile-trigger"
+              aria-expanded={showAdminProfile}
+              onClick={() => setShowAdminProfile((open) => !open)}
+            >
+              <span className="admin-profile-avatar">Z</span>
+              <span className="admin-profile-copy">
+                <strong>Zainab</strong>
+                <small>Zainab's Organic Hub</small>
+              </span>
+              <FaChevronDown className={showAdminProfile ? 'admin-profile-chevron open' : 'admin-profile-chevron'} />
+            </button>
+            {showAdminProfile && (
+              <div className="admin-header-dropdown admin-profile-dropdown">
+                <span className="admin-profile-dropdown-name">Zainab</span>
+                <span className="admin-profile-dropdown-detail">Zainab's Organic Hub</span>
+              </div>
+            )}
+          </div>
+
+          <button className="admin-refresh-btn" onClick={fetchData}>
+            <FaSyncAlt /> Refresh
+          </button>
+          <button className="admin-logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt /> Logout
+          </button>
+        </div>
       </div>
 
       {message.text && (
@@ -350,27 +541,6 @@ const AdminDashboard = () => {
           {message.text}
         </div>
       )}
-
-      <div className="admin-tabs">
-        <button className={activeTab === 'overview' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('overview')}>
-          <FaChartLine /> Overview
-        </button>
-        <button className={activeTab === 'customers' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('customers')}>
-          <FaUsers /> Customers ({allCustomers.length})
-        </button>
-        <button className={activeTab === 'markets' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('markets')}>
-          <FaStore /> Markets ({markets.length})
-        </button>
-        <button className={activeTab === 'products' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('products')}>
-          <FaBox /> Products ({allProducts.length})
-        </button>
-        <button className={activeTab === 'categories' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('categories')}>
-          <FaTag /> Categories ({categories.length})
-        </button>
-        <button className={activeTab === 'reviews' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('reviews')}>
-          <FaStar /> Reviews ({allReviews.length})
-        </button>
-      </div>
 
       {/* ============ OVERVIEW TAB ============ */}
       {activeTab === 'overview' && (
@@ -409,38 +579,69 @@ const AdminDashboard = () => {
           <div className="admin-charts-grid">
             <div className="admin-chart-card admin-chart-wide">
               <div className="admin-chart-header">
-                <h3><FaMoneyBillWave /> Revenue — Last 14 Days</h3>
+                <div>
+                  <h3><FaMoneyBillWave /> Revenue</h3>
+                  <span className="admin-chart-summary">
+                    Rs. {revenueChartData.reduce((total, day) => total + (Number(day.revenue) || 0), 0).toLocaleString()} in {chartRange} days
+                  </span>
+                </div>
+                {renderChartRange()}
               </div>
               <div className="admin-chart-body">
-                <ResponsiveContainer width="100%" height={260}>
-                  <LineChart data={analyticsData?.revenueChart || []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v) => `Rs. ${v}`} />
-                    <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontFamily: 'Outfit' }} formatter={(v) => [`Rs. ${v}`, 'Revenue']} />
-                    <Line type="monotone" dataKey="revenue" stroke="#2e7d32" strokeWidth={3} dot={{ fill: '#2e7d32', r: 4 }} activeDot={{ r: 6, fill: '#1b5e20' }} />
-                  </LineChart>
-                </ResponsiveContainer>
+                {revenueChartData.some((day) => Number(day.revenue) > 0) ? (
+                  <ChartFrame>
+                    <AreaChart data={revenueChartData} margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="adminRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#237a4b" stopOpacity={0.24} />
+                          <stop offset="95%" stopColor="#237a4b" stopOpacity={0.02} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8edf0" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} tickFormatter={(value) => `Rs. ${Number(value).toLocaleString()}`} width={76} />
+                      <Tooltip content={<RevenueTooltip />} cursor={{ stroke: '#8dbca0', strokeDasharray: '4 4' }} />
+                      <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#237a4b" strokeWidth={3} fill="url(#adminRevenueFill)" activeDot={{ r: 6, fill: '#174f33', stroke: '#ffffff', strokeWidth: 2 }} />
+                    </AreaChart>
+                  </ChartFrame>
+                ) : (
+                  <div className="admin-chart-empty">No completed-order revenue in this period</div>
+                )}
               </div>
             </div>
 
             <div className="admin-chart-card">
               <div className="admin-chart-header">
-                <h3><FaShoppingBag /> Order Status</h3>
+                <div>
+                  <h3><FaShoppingBag /> Order Status</h3>
+                  <span className="admin-chart-summary">{orderStatusTotal.toLocaleString()} orders tracked</span>
+                </div>
               </div>
               <div className="admin-chart-body">
                 {analyticsData?.statusChart?.length ? (
-                  <ResponsiveContainer width="100%" height={260}>
+                  <ChartFrame>
                     <PieChart>
-                      <Pie data={analyticsData.statusChart} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={3}>
+                      <Pie data={analyticsData.statusChart} dataKey="value" nameKey="name" innerRadius={62} outerRadius={94} paddingAngle={4} stroke="none">
                         {analyticsData.statusChart.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
+                          <Cell key={i} fill={entry.color} stroke="#ffffff" strokeWidth={3} />
                         ))}
+                        <Label
+                          content={({ viewBox }) => (
+                            <g>
+                              <text x={viewBox.cx} y={viewBox.cy - 2} textAnchor="middle" fill="#1e293b" fontSize="27" fontWeight="700">
+                                {orderStatusTotal.toLocaleString()}
+                              </text>
+                              <text x={viewBox.cx} y={viewBox.cy + 17} textAnchor="middle" fill="#64748b" fontSize="10">
+                                orders
+                              </text>
+                            </g>
+                          )}
+                        />
                       </Pie>
-                      <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0' }} />
+                      <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #dce4e8' }} formatter={(value, name) => [`${value} orders`, name]} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </ChartFrame>
                 ) : (
                   <div className="admin-chart-empty">No orders yet</div>
                 )}
@@ -449,20 +650,30 @@ const AdminDashboard = () => {
 
             <div className="admin-chart-card admin-chart-wide">
               <div className="admin-chart-header">
-                <h3><FaUsers /> New Users — Last 14 Days</h3>
+                <div>
+                  <h3><FaUsers /> New Users</h3>
+                  <span className="admin-chart-summary">
+                    {userGrowthData.reduce((total, day) => total + (Number(day.customers) || 0) + (Number(day.farmers) || 0), 0).toLocaleString()} joined in {chartRange} days
+                  </span>
+                </div>
+                {renderChartRange()}
               </div>
               <div className="admin-chart-body">
-                <ResponsiveContainer width="100%" height={260}>
-                  <LineChart data={analyticsData?.userGrowth || []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0' }} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line type="monotone" dataKey="customers" stroke="#3b82f6" strokeWidth={3} name="Customers" dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="farmers" stroke="#10b981" strokeWidth={3} name="Farmers" dot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
+                {userGrowthData.some((day) => Number(day.customers) > 0 || Number(day.farmers) > 0) ? (
+                  <ChartFrame>
+                    <LineChart data={userGrowthData} margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8edf0" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} width={32} />
+                      <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #dce4e8' }} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      <Line type="monotone" dataKey="customers" stroke="#3576a8" strokeWidth={3} name="Customers" dot={{ r: 3 }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="farmers" stroke="#d17a2d" strokeWidth={3} name="Farmers" dot={{ r: 3 }} activeDot={{ r: 6 }} />
+                    </LineChart>
+                  </ChartFrame>
+                ) : (
+                  <div className="admin-chart-empty">No new users in this period</div>
+                )}
               </div>
             </div>
 
@@ -472,15 +683,15 @@ const AdminDashboard = () => {
               </div>
               <div className="admin-chart-body">
                 {reports?.topFarmers?.length ? (
-                  <ResponsiveContainer width="100%" height={260}>
+                  <ChartFrame>
                     <BarChart data={reports.topFarmers.slice(0, 5)} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                       <YAxis dataKey="stallName" type="category" tick={{ fontSize: 11, fill: '#475569' }} width={90} />
                       <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0' }} formatter={(v) => [`Rs. ${v}`, 'Revenue']} />
-                      <Bar dataKey="revenue" fill="#2e7d32" radius={[0, 8, 8, 0]} maxBarSize={60} />
+                      <Bar dataKey="revenue" fill="#237a4b" radius={[0, 8, 8, 0]} maxBarSize={60} background={{ fill: '#f2f6f3' }} activeBar={{ fill: '#174f33' }} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartFrame>
                 ) : (
                   <div className="admin-chart-empty">No sales yet</div>
                 )}
@@ -560,7 +771,16 @@ const AdminDashboard = () => {
                     <tr key={c._id}>
                       <td>
                         <div className="admin-user-cell">
-                          <div className="admin-avatar">{getInitials(c.name)}</div>
+                          <div className="admin-avatar">
+                            {getInitials(c.name)}
+                            {c.imageUrl && (
+                              <img
+                                src={c.imageUrl}
+                                alt=""
+                                onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                              />
+                            )}
+                          </div>
                           <span>{c.name}</span>
                         </div>
                       </td>
@@ -797,7 +1017,16 @@ const AdminDashboard = () => {
                 <div className="admin-review-card" key={review._id}>
                   <div className="admin-review-header">
                     <div className="admin-review-author">
-                      <div className="admin-avatar">{getInitials(review.customerId?.name)}</div>
+                      <div className="admin-avatar">
+                        {getInitials(review.customerId?.name)}
+                        {review.customerId?.imageUrl && (
+                          <img
+                            src={review.customerId.imageUrl}
+                            alt=""
+                            onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                          />
+                        )}
+                      </div>
                       <div>
                         <span className="admin-review-name">{review.customerId?.name || 'Anonymous'}</span>
                         <span className="admin-review-date">{new Date(review.createdAt).toLocaleDateString()}</span>
@@ -819,6 +1048,38 @@ const AdminDashboard = () => {
                     Remove Review
                   </button>
                 </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'contact' && (
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <h2><FaEnvelope className="admin-section-icon" /> Customer Contact Messages</h2>
+            <span className="admin-badge">{contactMessages.length} total</span>
+          </div>
+          {contactMessages.length === 0 ? (
+            <div className="admin-empty">
+              <FaEnvelope className="admin-empty-icon" />
+              <p>No contact messages yet.</p>
+            </div>
+          ) : (
+            <div className="admin-contact-list">
+              {contactMessages.map((contactMessage) => (
+                <article className="admin-contact-card" key={contactMessage._id}>
+                  <div className="admin-contact-header">
+                    <div>
+                      <h3>{contactMessage.subject || 'No subject'}</h3>
+                      <p>{contactMessage.name} · <a href={`mailto:${contactMessage.email}`}>{contactMessage.email}</a></p>
+                    </div>
+                    <time dateTime={contactMessage.createdAt}>
+                      {new Date(contactMessage.createdAt).toLocaleString()}
+                    </time>
+                  </div>
+                  <p className="admin-contact-message">{contactMessage.message}</p>
+                </article>
               ))}
             </div>
           )}
@@ -907,13 +1168,31 @@ const AdminDashboard = () => {
                 />
               </div>
               <div className="admin-form-group">
-                <label>Image URL (optional)</label>
+                <label>Category Image (optional)</label>
                 <input
                   type="url"
                   value={categoryForm.imageUrl}
                   onChange={(e) => setCategoryForm({ ...categoryForm, imageUrl: e.target.value })}
                   placeholder="https://res.cloudinary.com/..."
                 />
+                <input
+                  ref={categoryFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCategoryImageUpload}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  type="button"
+                  className="admin-category-upload"
+                  onClick={() => categoryFileInputRef.current?.click()}
+                  disabled={categoryImageUploading}
+                >
+                  {categoryImageUploading ? <FaSpinner className="admin-spinner-sm" /> : <FaImage />}
+                  {categoryImageUploading ? 'Uploading photo...' : 'Upload from computer'}
+                </button>
+                <span className="admin-category-upload-hint">JPG, PNG, or WebP. Maximum 5MB.</span>
+                {categoryImageError && <span className="admin-category-upload-error" role="alert">{categoryImageError}</span>}
                 {categoryForm.imageUrl && (
                   <div className="admin-category-preview">
                     <FaImage />
@@ -937,14 +1216,16 @@ const AdminDashboard = () => {
               </div>
               <div className="admin-modal-actions">
                 <button type="button" className="admin-btn-cancel" onClick={() => setShowCategoryModal(false)}>Cancel</button>
-                <button type="submit" className="admin-btn-primary" disabled={actionLoading === 'category'}>
-                  {actionLoading === 'category' ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}
+                <button type="submit" className="admin-btn-primary" disabled={actionLoading === 'category' || categoryImageUploading}>
+                  {categoryImageUploading ? 'Uploading...' : actionLoading === 'category' ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+        </main>
+      </div>
     </div>
   );
 };

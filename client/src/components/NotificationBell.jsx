@@ -58,7 +58,14 @@ const NotificationBell = () => {
 
   const handleNotificationClick = (notif) => {
     if (!notif.isRead) markAsRead(notif._id);
-    if (notif.link) navigate(notif.link);
+    const orderId = notif.link?.match(/\/orders\/([a-f\d]{24})/i)?.[1];
+    if (orderId && notif.type?.startsWith('order_')) {
+      navigate('/customer', {
+        state: notif.type === 'order_completed' ? { reviewOrderId: orderId } : undefined,
+      });
+    } else if (notif.link) {
+      navigate(notif.link);
+    }
     setIsOpen(false);
   };
 
@@ -117,9 +124,27 @@ const NotificationBell = () => {
                     className={notif.isRead ? 'notif-item' : 'notif-item unread'}
                     onClick={() => handleNotificationClick(notif)}
                   >
-                    <div className={`notif-item-icon notif-icon-${color}`}>
+                    {/* Image if available, otherwise type-based icon */}
+                    {notif.imageUrl ? (
+                      <img
+                        src={notif.imageUrl}
+                        alt=""
+                        className="notif-item-image"
+                        onError={(e) => {
+                          // Fallback to icon if image fails
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+
+                    <div
+                      className={`notif-item-icon notif-icon-${color}`}
+                      style={notif.imageUrl ? { display: 'none' } : undefined}
+                    >
                       {icon}
                     </div>
+
                     <div className="notif-item-body">
                       <p className="notif-item-message">{notif.message}</p>
                       <span className="notif-item-time">

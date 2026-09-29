@@ -210,7 +210,7 @@
 
 .auth-success {
   background: #f0fdf4;
-  color: #15803d;
+  color: #1b5e20;
   border: 1px solid #bbf7d0;
 }
 
@@ -608,7 +608,7 @@
 
 .market-select-card:hover {
   border-color: #c8e6c9;
-  background: #f8fcf8;
+  background: #f1f8e9;
   transform: translateY(-1px);
 }
 
@@ -680,7 +680,7 @@
   gap: 8px;
   flex-wrap: wrap;
   padding: 12px;
-  background: #f8fcf8;
+  background: #f1f8e9;
   border: 1.5px solid #e8f5e9;
   border-radius: 12px;
 }
@@ -706,7 +706,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #f8fcf8;
+  background: #f1f8e9;
   border: 1.5px solid #e8f5e9;
   border-radius: 12px;
   font-size: 0.9rem;

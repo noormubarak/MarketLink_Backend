@@ -90,7 +90,7 @@
 .reviews-empty {
   text-align: center;
   padding: 40px 20px;
-  background: #f8fcf8;
+  background: #f1f8e9;
   border-radius: 14px;
   border: 1.5px dashed #c8e6c9;
 }
@@ -114,7 +114,7 @@
 }
 
 .review-card {
-  background: #f8fcf8;
+  background: #f1f8e9;
   border-radius: 16px;
   padding: 20px;
   transition: all 0.3s ease;
@@ -142,7 +142,7 @@
 .review-avatar {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, #2e7d32, #43a047);
   color: #ffffff;
   border-radius: 50%;
   display: flex;

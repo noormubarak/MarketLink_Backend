@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import WriteReviewModal from '../components/WriteReviewModal';
@@ -13,6 +13,7 @@ import './CustomerDashboard.css';
 
 const CustomerDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const [orders, setOrders] = useState([]);
@@ -55,6 +56,17 @@ const CustomerDashboard = () => {
   const recentOrders = [...orders]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 3);
+
+  const notificationReviewOrder = orders.find(
+    (order) => order._id === location.state?.reviewOrderId && order.status === 'completed'
+  );
+
+  const closeReviewModal = () => {
+    setReviewingOrder(null);
+    if (location.state?.reviewOrderId) {
+      navigate('/customer', { replace: true, state: null });
+    }
+  };
 
   const getInitials = (name) =>
     name ? name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase() : '?';
@@ -276,10 +288,10 @@ const CustomerDashboard = () => {
       </div>
 
       {/* Review Modal */}
-      {reviewingOrder && (
+      {(reviewingOrder || notificationReviewOrder) && (
         <WriteReviewModal
-          order={reviewingOrder}
-          onClose={() => setReviewingOrder(null)}
+          order={reviewingOrder || notificationReviewOrder}
+          onClose={closeReviewModal}
           onSuccess={handleReviewSuccess}
         />
       )}

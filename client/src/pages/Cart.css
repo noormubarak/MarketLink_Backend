@@ -390,7 +390,7 @@
   align-items: center;
   gap: 14px;
   padding: 12px;
-  background: #f8fcf8;
+  background: #f1f8e9;
   border-radius: 12px;
 }
 
@@ -497,7 +497,8 @@
 }
 
 .checkout-form input,
-.checkout-form textarea {
+.checkout-form textarea,
+.checkout-form select {
   padding: 12px 16px;
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
@@ -510,7 +511,8 @@
 }
 
 .checkout-form input:focus,
-.checkout-form textarea:focus {
+.checkout-form textarea:focus,
+.checkout-form select:focus {
   border-color: #2e7d32;
   box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.08);
 }
@@ -519,6 +521,12 @@
   font-size: 0.8rem;
   color: #2e7d32;
   font-weight: 600;
+}
+
+.pickup-availability-message {
+  color: #b91c1c;
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
 
 .checkout-info-box {
@@ -630,7 +638,7 @@
 }
 
 .success-details {
-  background: #f8fcf8;
+  background: #f1f8e9;
   border: 1px solid #e8f5e9;
   border-radius: 16px;
   padding: 20px;

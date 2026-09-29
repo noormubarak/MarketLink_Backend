@@ -43,10 +43,11 @@ const Navbar = () => {
   // Removed "Contact" — shortened "About Us" → "About"
   const navLinks = [
     { name: 'Home', path: '/' },
+    { name: 'About', path: '/about' },
     { name: 'Markets', path: '/markets' },
     { name: 'Farmers', path: '/farmers' },
     { name: 'Products', path: '/products' },
-    { name: 'About', path: '/about' },
+    { name: 'Contact', path: '/contact' },
   ];
 
   const showCart = !user || user.role === 'customer';

@@ -1,10 +1,12 @@
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import About from './pages/About';
 import AIChatWidget from './components/AIChatWidget';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
+import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Products from './pages/Products';
@@ -17,6 +19,7 @@ import Notifications from './pages/Notifications';
 import CustomerDashboard from './pages/CustomerDashboard';
 import FarmerDashboard from './pages/FarmerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import { useAuth } from './context/AuthContext';
 import './App.css';
 
 const Placeholder = ({ name }) => (
@@ -27,6 +30,11 @@ const Placeholder = ({ name }) => (
 
 function App() {
   const location = useLocation();
+  const { user } = useAuth();
+
+  if (user?.role === 'farmer' && location.pathname !== '/farmer') {
+    return <Navigate to="/farmer" replace />;
+  }
 
   // ✅ FIXED: exact paths + nested prefixes (NOT prefix-match on /farmer)
   // This ensures /farmers (public page) keeps navbar/footer,
@@ -37,20 +45,26 @@ function App() {
   const shouldHideLayout =
     hideExact.includes(location.pathname) ||
     hidePrefixes.some((p) => location.pathname.startsWith(p));
+  const showNavbar = !shouldHideLayout;
 
   const showAIWidget = !shouldHideLayout;
 
   return (
     <>
-      {!shouldHideLayout && <Navbar />}
+      {showNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
         <Route path="/markets" element={<Markets />} />
         <Route path="/farmers" element={<Farmers />} />
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/about" element={<Placeholder name="About Us" />} />
-        <Route path="/contact" element={<Placeholder name="Contact" />} />
+        <Route path="/contact" element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <Contact />
+          </ProtectedRoute>
+        } />
 
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

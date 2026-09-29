@@ -200,7 +200,7 @@
 }
 
 .notif-page-item:hover {
-  background: #f8fcf8;
+  background: #f1f8e9;
 }
 
 .notif-page-item.unread {
@@ -220,6 +220,15 @@
   justify-content: center;
   font-size: 1.1rem;
   flex-shrink: 0;
+}
+
+.notif-page-item-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f1f5f9;
 }
 
 .notif-icon-orange { background: #fff3e0; color: #f57c00; }
@@ -279,5 +288,9 @@
     width: 40px;
     height: 40px;
     font-size: 0.95rem;
+  }
+  .notif-page-item-image {
+    width: 40px;
+    height: 40px;
   }
 }

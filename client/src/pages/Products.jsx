@@ -7,7 +7,7 @@ import {
   FaSearch, FaFilter, FaTimes, FaLeaf, FaBoxOpen,
   FaChevronLeft, FaChevronRight, FaSortAmountDown,
   FaShoppingBasket, FaSpinner, FaCheckCircle, FaArrowRight,
-  FaStar, FaUndo
+  FaStar, FaUndo, FaQuoteLeft, FaReply
 } from 'react-icons/fa';
 import './Products.css';
 
@@ -28,6 +28,7 @@ const Products = () => {
 
   const [products, setProducts] = useState([]);
   const [productRatings, setProductRatings] = useState({});
+  const [reviewModal, setReviewModal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
@@ -62,6 +63,15 @@ const Products = () => {
 
   const [sort, setSort] = useState('-createdAt');
 
+  useEffect(() => {
+    if (!reviewModal) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setReviewModal(null);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [reviewModal]);
+
   // ============ FETCH REVIEWS FOR PRODUCTS ============
   const fetchRatingsForProducts = async (productList) => {
     if (!productList || productList.length === 0) return {};
@@ -77,6 +87,7 @@ const Products = () => {
             ratingsMap[p._id] = {
               avg: Number(avg.toFixed(1)),
               count: revs.length,
+              reviews: revs,
             };
           }
         } catch (err) {
@@ -578,6 +589,18 @@ const Products = () => {
                           <p className="product-desc">{product.description}</p>
                         )}
 
+                        <button
+                          type="button"
+                          className="product-card-reviews-btn"
+                          onClick={() => setReviewModal({ product, ratingInfo })}
+                          aria-haspopup="dialog"
+                          aria-label={`See ${ratingInfo?.count || 0} reviews for ${product.name}`}
+                        >
+                          <FaQuoteLeft />
+                          <span>See reviews</span>
+                          <span className="product-card-reviews-count">{ratingInfo?.count || 0}</span>
+                        </button>
+
                         <div className="product-price-row">
                           <div>
                             <span className="product-price">Rs. {product.price}</span>
@@ -621,6 +644,85 @@ const Products = () => {
           )}
         </main>
       </div>
+
+      {reviewModal && (
+        <div className="product-reviews-overlay" onClick={() => setReviewModal(null)}>
+          <section
+            className="product-reviews-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-reviews-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="product-reviews-modal-header">
+              <div>
+                <span className="product-reviews-eyebrow">Customer feedback</span>
+                <h2 id="product-reviews-title">{reviewModal.product.name}</h2>
+                {reviewModal.ratingInfo ? (
+                  <div className="product-reviews-summary">
+                    <span className="product-reviews-average">{reviewModal.ratingInfo.avg.toFixed(1)}</span>
+                    <span className="product-reviews-summary-stars">{renderCardStars(reviewModal.ratingInfo.avg)}</span>
+                    <span>{reviewModal.ratingInfo.count} review{reviewModal.ratingInfo.count !== 1 ? 's' : ''}</span>
+                  </div>
+                ) : (
+                  <span className="product-reviews-no-rating">No reviews yet</span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="product-reviews-close"
+                onClick={() => setReviewModal(null)}
+                aria-label="Close reviews"
+              >
+                <FaTimes />
+              </button>
+            </header>
+            <div className="product-reviews-modal-list">
+              {reviewModal.ratingInfo?.reviews?.length ? (
+                reviewModal.ratingInfo.reviews.map((review) => (
+                  <article className="product-review-entry" key={review._id}>
+                    <div className="product-review-entry-header">
+                      <div className="product-review-customer">
+                        {review.customerId?.imageUrl ? (
+                          <img src={review.customerId.imageUrl} alt="" />
+                        ) : (
+                          <span>{review.customerId?.name?.charAt(0).toUpperCase() || '?'}</span>
+                        )}
+                        <div>
+                          <strong>{review.customerId?.name || 'Customer'}</strong>
+                          <time dateTime={review.createdAt}>
+                            {new Date(review.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </time>
+                        </div>
+                      </div>
+                      <span className="product-review-entry-stars" aria-label={`${review.rating} out of 5 stars`}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FaStar key={star} className={star <= review.rating ? 'filled' : ''} />
+                        ))}
+                      </span>
+                    </div>
+                    <p className="product-review-entry-comment">
+                      {review.comment || 'This customer left a rating without a comment.'}
+                    </p>
+                    {review.farmerResponse && (
+                      <div className="product-review-entry-reply">
+                        <span><FaReply /> Farmer reply</span>
+                        <p>{review.farmerResponse}</p>
+                      </div>
+                    )}
+                  </article>
+                ))
+              ) : (
+                <div className="product-reviews-empty">
+                  <FaStar />
+                  <h3>No reviews yet</h3>
+                  <p>Customer reviews and farmer replies will appear here.</p>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
       {toast.show && (
         <div className="products-toast">

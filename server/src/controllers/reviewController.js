@@ -55,9 +55,14 @@ export const byProduct = asyncHandler(async (req, res) => {
 
 export const respond = asyncHandler(async (req, res) => {
   const farmer = await FarmerProfile.findOne({ userId: req.user._id });
+  const farmerResponse = req.body.farmerResponse ?? req.body.response ?? '';
+  if (typeof farmerResponse !== 'string' || !farmerResponse.trim()) {
+    return fail(res, 'Reply cannot be empty');
+  }
+
   const review = await Review.findOneAndUpdate(
     { _id: req.params.id, farmerId: farmer._id },
-    { farmerResponse: req.body.response || '' },
+    { farmerResponse: farmerResponse.trim() },
     { new: true }
   );
   if (!review) return fail(res, 'Review not found', 404);

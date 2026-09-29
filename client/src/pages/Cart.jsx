@@ -22,31 +22,77 @@ const Cart = () => {
   const [step, setStep] = useState('cart'); // 'cart' | 'checkout' | 'success'
   const [pickupDate, setPickupDate] = useState('');
   const [pickupDay, setPickupDay] = useState('');
+  const [pickupWindows, setPickupWindows] = useState([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState('');
   const [notes, setNotes] = useState('');
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
 
-  // Determine available pickup days from items (based on farmer operating days)
-  // For simplicity: allow any day, backend validates
-  const getMinDate = () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+  const getAvailablePickupDates = () => {
+    const windowsByDay = new Map(pickupWindows.map((window) => [window.day, window]));
+    return Array.from({ length: 30 }, (_, index) => {
+      const date = new Date();
+      date.setHours(12, 0, 0, 0);
+      date.setDate(date.getDate() + index + 1);
+      const day = DAYS[date.getDay()];
+      const pickupWindow = windowsByDay.get(day);
+      if (!pickupWindow) return null;
+
+      const pad = (value) => String(value).padStart(2, '0');
+      return {
+        value: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+        day,
+        label: date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
+        pickupWindow,
+      };
+    }).filter(Boolean);
   };
 
-  const getMaxDate = () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 30);
-    return d.toISOString().split('T')[0];
+  const availablePickupDates = getAvailablePickupDates();
+
+  const handleCheckout = async () => {
+    const farmerId = cartItems[0]?.farmerId;
+    if (!farmerId) {
+      setAvailabilityError('Pickup availability is not available for this cart.');
+      setPickupWindows([]);
+      setStep('checkout');
+      return;
+    }
+
+    setAvailabilityLoading(true);
+    setAvailabilityError('');
+    setPickupDate('');
+    setPickupDay('');
+    try {
+      const res = await api.get(`/farmers/${farmerId}`);
+      const farmer = res.data.data || {};
+      const savedWindows = farmer.pickupWindows || [];
+      const windowsByDay = new Map(savedWindows.map((window) => [window.day, window]));
+      const operatingDays = farmer.operatingDays?.length
+        ? farmer.operatingDays
+        : savedWindows.map((window) => window.day);
+      const fallbackWindow = savedWindows[0];
+
+      setPickupWindows(operatingDays.map((day) => windowsByDay.get(day) || ({
+        day,
+        startTime: fallbackWindow?.startTime || '',
+        endTime: fallbackWindow?.endTime || '',
+      })));
+      setStep('checkout');
+    } catch {
+      setAvailabilityError('Could not load this farmer’s pickup dates. Please try again.');
+      setPickupWindows([]);
+      setStep('checkout');
+    } finally {
+      setAvailabilityLoading(false);
+    }
   };
 
   const handleDateChange = (date) => {
     setPickupDate(date);
-    if (date) {
-      const day = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
-      setPickupDay(day);
-    }
+    setPickupDay(availablePickupDates.find((option) => option.value === date)?.day || '');
   };
 
   // ============ PLACE ORDER ============
@@ -212,14 +258,27 @@ const Cart = () => {
                 <label>
                   <FaCalendarAlt /> Pickup Date
                 </label>
-                <input
-                  type="date"
+                <select
+                  className="pickup-date-select"
                   value={pickupDate}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  min={getMinDate()}
-                  max={getMaxDate()}
+                  disabled={availabilityLoading || availablePickupDates.length === 0}
                   required
-                />
+                >
+                  <option value="">Choose an available date</option>
+                  {availablePickupDates.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}{option.pickupWindow.startTime && option.pickupWindow.endTime
+                        ? ` · ${option.pickupWindow.startTime}–${option.pickupWindow.endTime}`
+                        : ''}
+                    </option>
+                  ))}
+                </select>
+                {availabilityLoading && <span className="pickup-day-hint">Loading available dates…</span>}
+                {availabilityError && <span className="pickup-availability-message">{availabilityError}</span>}
+                {!availabilityLoading && !availabilityError && availablePickupDates.length === 0 && (
+                  <span className="pickup-availability-message">This farmer has no pickup dates available in the next 30 days.</span>
+                )}
                 {pickupDay && (
                   <span className="pickup-day-hint">
                     Selected day: <strong>{pickupDay}</strong>
@@ -364,9 +423,10 @@ const Cart = () => {
 
             <button
               className="checkout-btn"
-              onClick={() => setStep('checkout')}
+              onClick={handleCheckout}
+              disabled={availabilityLoading}
             >
-              Proceed to Checkout <FaArrowRight />
+              {availabilityLoading ? <><FaSpinner className="spin" /> Loading Dates...</> : <>Proceed to Checkout <FaArrowRight /></>}
             </button>
 
             <Link to="/products" className="continue-shopping-link">

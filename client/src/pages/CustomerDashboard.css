@@ -396,7 +396,7 @@
 }
 
 .cd-order-row:hover {
-  background: #f8fcf8;
+  background: #f1f8e9;
 }
 
 .cd-order-image {
@@ -611,7 +611,7 @@
    ========================================= */
 .cd-success-banner {
   background: #f0fdf4;
-  color: #15803d;
+  color: #1b5e20;
   border: 1px solid #bbf7d0;
   padding: 14px 20px;
   border-radius: 12px;
@@ -684,7 +684,7 @@
 
 .cd-home-btn:hover {
   background: #ffffff;
-  color: #16a34a;
+  color: #2e7d32;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
@@ -761,7 +761,7 @@
 
 .cd-home-btn:hover {
   background: #ffffff;
-  color: #16a34a;
+  color: #2e7d32;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
